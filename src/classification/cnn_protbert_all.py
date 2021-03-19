@@ -78,20 +78,22 @@ for i in y:
 
 y_70 = np.asarray(y_70)
 
+# SMOTE
 smote = SMOTE(random_state = 101)
 X_res, y_res = smote.fit_resample(X, y_70)
 X_res = np.expand_dims(X_res, axis = 1)
 print(len(y), len(y_res))
 
-y_res = to_categorical(y_res)
-  
+y_70 = to_categorical(y_70)
+
+X = np.expand_dims(X, axis = 1)
 # y process
 print("Loaded X and y")
 
-X_res, y_res = shuffle(X_res, y_res, random_state=42)
+X, y = shuffle(X, y_70, random_state=42)
 print("Shuffled")
 
-X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 print("Conducted Train-Test Split")
 
 # keras nn model
@@ -134,7 +136,7 @@ def sensitivity(y_true, y_pred):
 model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics=['accuracy', sensitivity])
 
 # callbacks
-mcp_save = keras.callbacks.ModelCheckpoint('../saved_models/cnn_pb_smote.h5', save_best_only=True, monitor='val_accuracy', verbose=1)
+mcp_save = keras.callbacks.ModelCheckpoint('../saved_models/cnn_pb_all_clas.h5', save_best_only=True, monitor='val_accuracy', verbose=1)
 reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor=0.1, patience=40, verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
 callbacks_list = [reduce_lr, mcp_save]
 
@@ -145,9 +147,10 @@ num_epochs = 500
 weights = {0:1, 1:30}
 
 with tf.device('/gpu:0'): # use gpu
-    history = model.fit(X_train, y_train, batch_size = bs, epochs = num_epochs, validation_data = (X_test, y_test), shuffle = False, callbacks = callbacks_list)
+    #history = model.fit(X_train, y_train, batch_size = bs, epochs = num_epochs, validation_data = (X_test, y_test), shuffle = False, callbacks = callbacks_list, class_weight = weights)
     model = load_model('../saved_models/cnn_pb_smote.h5', custom_objects = {'sensitivity': sensitivity})
     y_pred = model.predict(X_test)
+    print(y_pred)
     # print(y_test, y_pred)
     # Metrics
     print("Classification Report")
@@ -166,56 +169,24 @@ Classes:
 
 ProtBert Embeddings + Convolutional Neural Network
 
-Classification Report: BS 32
+Classification Report
               precision    recall  f1-score   support
 
-           0       0.96      0.96      0.96      1117
-           1       0.66      0.62      0.64       126
-
-    accuracy                           0.93      1243
-   macro avg       0.81      0.79      0.80      1243
-weighted avg       0.93      0.93      0.93      1243
-
-
-Confusion Matrix:
-
-[[1076   41]
- [  48   78]]
-
-F1 Score: 0.9274879902452139
-
-Classification Report: BS 64
-              precision    recall  f1-score   support
-
-           0       0.96      0.94      0.95      1117
-           1       0.57      0.69      0.63       126
+           0       0.97      0.94      0.95      1117
+           1       0.57      0.70      0.63       126
 
     accuracy                           0.92      1243
    macro avg       0.77      0.82      0.79      1243
 weighted avg       0.92      0.92      0.92      1243
 
 Confusion Matrix
-[[1052   65]
- [  39   87]]
+[[1050   67]
+ [  38   88]]
 F1 Score
-0.9197514002509561
-
-Classification Report: BS 128
-              precision    recall  f1-score   support
-
-           0       0.97      0.91      0.94      1117
-           1       0.49      0.75      0.60       126
-
-    accuracy                           0.90      1243
-   macro avg       0.73      0.83      0.77      1243
-weighted avg       0.92      0.90      0.91      1243
-
-Confusion Matrix
-[[1020   97]
- [  31   95]]
-F1 Score
-0.9061421394887608
+0.9193303887978407
 '''
+
+
 '''SMOTE Sampling:
 Threshold 70
 Accuracy: 0.97558
@@ -234,4 +205,7 @@ Confusion Matrix
  [   3 1128]]
 F1 Score
 0.9755633329631406
+'''
+'''
+Brenda Dataset + ProtBert + SMOTE + Convolutional Neural Network 
 '''

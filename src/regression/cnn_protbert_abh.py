@@ -52,6 +52,13 @@ X = np.expand_dims(X, axis = 1)
 y = np.asarray(list(ds["temperatures"]))
 y = np.array(y, dtype='f')
 
+# normalization 
+maxy = max(y)
+miny = min(y)
+print(maxy, miny)
+
+y = (y - miny)/(maxy - miny)
+
 # y process
 print("Loaded X and y")
 
@@ -64,29 +71,29 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 print("Conducted Train-Test Split")
 print(X_train.shape)
 
-bs = 16
+bs = 4
 
-with tf.device('/cpu:0'): # use gpu
+with tf.device('/gpu:0'): # use gpu
 
     # keras nn model
     input_ = Input(shape = (1,1024,))
-    x = Conv1D(512, (3), padding="same", activation = "relu")(input_)
+    x = Conv1D(512, (3), kernel_initializer = "normal", padding="same", activation = "relu")(input_)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x)
-    x = Conv1D(512, (3), padding="same", activation = "relu")(x)
+    x = Conv1D(512, (3), kernel_initializer = "normal", padding="same", activation = "relu")(x)
     x = Dropout(0.4)(x)
     x = BatchNormalization()(x)
     x = Flatten()(x)
-    x = Dense(1024, activation = "relu")(x)
+    x = Dense(1024, kernel_initializer = "normal", activation = "relu")(x)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x)
-    x = Dense(1024, activation = "relu")(x)
+    x = Dense(1024, kernel_initializer = "normal", activation = "relu")(x)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x)
-    x = Dense(1024, activation = "relu")(x)
+    x = Dense(1024, kernel_initializer = "normal", activation = "relu")(x)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x) 
-    out = Dense(1, activation = 'linear')(x)
+    out = Dense(1, kernel_initializer = "normal", activation = 'linear')(x)
     model = Model(input_, out)
 
     print(model.summary())
@@ -96,21 +103,22 @@ with tf.device('/cpu:0'): # use gpu
     model.compile(optimizer = "adam", loss = "mean_squared_error", metrics=['mse'])
 
     # callbacks
-    mcp_save = keras.callbacks.ModelCheckpoint('../saved_models/cnn_pb.h5', save_best_only=True, monitor='val_mse', verbose=1)
-    reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_mse', factor=0.1, patience=10, verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
+    mcp_save = keras.callbacks.ModelCheckpoint('../saved_models/cnn_pb_abh_reg_8.h5', save_best_only=True, monitor='val_mse', verbose=1)
+    reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_mse', factor=0.1, patience=40, verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
     callbacks_list = [reduce_lr, mcp_save]
 
     print("Training")
     # training
     num_epochs = 500
     history = model.fit(X_train, y_train, batch_size = bs, epochs = num_epochs, validation_data = (X_test, y_test), shuffle = False, callbacks = callbacks_list)
-
+    model = load_model('../saved_models/cnn_pb_abh_reg_8.h5')
+    y_pred = model.predict(X_test)
+    print((y_pred)*80.0 + 20.0, (y_test * 80.0) + 20.0)
 '''
-Results:
-MSE: 378.36914 (BS 1)
-MSE: 273.98532 (BS 2)
-MSE: 53.19987 (BS 4) - RMSE: 7.2938241 (Best)
-MSE: 88.78255 (BS 8)
+Results: Normalized (Max: 100.0, Min: 20.0)
+MSE: 0.01381 (BS 4)
+MSE: 0.01095 (BS 8)
+MSE: 0.01520 (BS 16)
 '''
 
 

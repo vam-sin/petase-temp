@@ -60,7 +60,7 @@ if gpus:
 ds = pd.read_csv('../../processed_data/seq_temp_abh.csv')
 X = np.load('../../processed_data/PB_abh.npz')['arr_0']
 X = np.array(X, dtype = 'f')
-X = np.expand_dims(X, axis = 1)
+# X = np.expand_dims(X, axis = 1)
 y = list(ds["temperatures"])
 y = np.array(y, dtype='f')
 
@@ -85,6 +85,27 @@ print("Shuffled")
 
 X_train, X_test, y_train, y_test = train_test_split(X, y_70, test_size=0.2, random_state=42)
 print("Conducted Train-Test Split")
+
+X_pet = np.load('../../processed_data/PB_PETase.npz')['arr_0']
+# X_pet = np.expand_dims(X_pet, axis = 1)
+y_pet = [[1,0],[1,0],[1,0],[1,0],[1,0],[0,1]]
+
+X_test = list(X_test)
+y_test = list(y_test)
+
+for i in X_pet:
+    X_test.append(i)
+
+for i in y_pet:
+    y_test.append(i)
+
+X_test = np.asarray(X_test)
+y_test = np.asarray(y_test)
+
+X_test = np.expand_dims(X_test, axis = 1)
+X_train = np.expand_dims(X_train, axis = 1)
+
+print(X_train.shape, X_test.shape, y_test.shape, y_train.shape)
 
 # keras nn model
 input_ = Input(shape = (1, 1024,))
@@ -126,7 +147,7 @@ def sensitivity(y_true, y_pred):
 model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics=['accuracy', sensitivity])
 
 # callbacks
-mcp_save = keras.callbacks.ModelCheckpoint('../saved_models/cnn_pb_abh.h5', save_best_only=True, monitor='val_accuracy', verbose=1)
+mcp_save = keras.callbacks.ModelCheckpoint('../saved_models/cnn_pb_abh_pet.h5', save_best_only=True, monitor='val_accuracy', verbose=1)
 reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor=0.1, patience=40, verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
 callbacks_list = [reduce_lr, mcp_save]
 
@@ -137,8 +158,8 @@ num_epochs = 500
 weights = {0:1, 1:1}
 
 with tf.device('/gpu:0'): # use gpu
-    #history = model.fit(X_train, y_train, batch_size = bs, epochs = num_epochs, validation_data = (X_test, y_test), shuffle = False, callbacks = callbacks_list, class_weight = weights)
-    model = load_model('../saved_models/cnn_pb.h5', custom_objects = {'sensitivity': sensitivity})
+    history = model.fit(X_train, y_train, batch_size = bs, epochs = num_epochs, validation_data = (X_test, y_test), shuffle = False, callbacks = callbacks_list, class_weight = weights)
+    model = load_model('../saved_models/cnn_pb_abh_pet.h5', custom_objects = {'sensitivity': sensitivity})
     y_pred = model.predict(X_test)
     # print(y_test, y_pred)
     # Metrics

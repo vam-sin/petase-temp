@@ -9,7 +9,7 @@ import tensorflow as tf
 from keras.models import Model
 from keras.models import load_model
 from keras import optimizers
-from keras.layers import Dense, Dropout, BatchNormalization, Conv1D, Flatten, Input
+from keras.layers import LeakyReLU, Dense, Dropout, BatchNormalization, Conv1D, Flatten, Input
 from keras.regularizers import l2
 from sklearn.model_selection import train_test_split, KFold, cross_val_score, StratifiedKFold
 from sklearn.preprocessing import StandardScaler, LabelEncoder, normalize
@@ -53,6 +53,12 @@ X = np.expand_dims(X, axis = 1)
 y = np.asarray(list(ds["temperatures"]))
 y = np.array(y, dtype='f')
 
+maxy = max(y)
+miny = min(y)
+print(maxy, miny)
+
+y = (y - miny)/(maxy - miny)
+
 # y process
 print("Loaded X and y")
 
@@ -65,28 +71,33 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 print("Conducted Train-Test Split")
 print(X_train.shape)
 
-bs = 256
+bs = 64
 
 with tf.device('/gpu:0'): # use gpu
 
     # keras nn model
     input_ = Input(shape = (1,1024,))
-    x = Conv1D(512, (3), padding="same", activation = "relu")(input_)
+    x = Conv1D(512, (3), kernel_initializer = 'glorot_uniform', padding="same")(input_)
+    x = LeakyReLU(alpha = 0.05)(x)
+    x = Dropout(0.5)(x)
     x = BatchNormalization()(x)
-    x = Dropout(0.4)(x)
-    x = Conv1D(512, (3), padding="same", activation = "relu")(x)
-    x = Dropout(0.4)(x)
+    x = Conv1D(512, (3), kernel_initializer = 'glorot_uniform', padding="same")(x)
+    x = LeakyReLU(alpha = 0.05)(x)
+    x = Dropout(0.6)(x)
     x = BatchNormalization()(x)
     x = Flatten()(x)
-    x = Dense(1024, activation = "relu")(x)
+    x = Dense(1024, kernel_initializer = 'glorot_uniform')(x)
+    x = LeakyReLU(alpha = 0.05)(x)
     x = BatchNormalization()(x)
-    x = Dropout(0.4)(x)
-    x = Dense(1024, activation = "relu")(x)
+    x = Dropout(0.8)(x)
+    x = Dense(1024, kernel_initializer = 'glorot_uniform')(x)
+    x = LeakyReLU(alpha = 0.05)(x)
     x = BatchNormalization()(x)
-    x = Dropout(0.4)(x)
-    x = Dense(1024, activation = "relu")(x)
+    x = Dropout(0.8)(x)
+    x = Dense(1024, kernel_initializer = 'glorot_uniform')(x)
+    x = LeakyReLU(alpha = 0.05)(x)
     x = BatchNormalization()(x)
-    x = Dropout(0.4)(x) 
+    x = Dropout(0.8)(x) 
     out = Dense(1, activation = 'linear')(x)
     model = Model(input_, out)
 
@@ -94,10 +105,10 @@ with tf.device('/gpu:0'): # use gpu
 
     # adam optimizer
     opt = keras.optimizers.Adam(learning_rate = 1e-4)
-    model.compile(optimizer = "adam", loss = "mean_squared_error", metrics=['mse'])
+    model.compile(optimizer = "rmsprop", loss = "mean_squared_error", metrics=['mse'])
 
     # callbacks
-    mcp_save = keras.callbacks.ModelCheckpoint('../saved_models/cnn_pb.h5', save_best_only=True, monitor='val_mse', verbose=1)
+    mcp_save = keras.callbacks.ModelCheckpoint('../saved_models/cnn_pb_reg_all.h5', save_best_only=True, monitor='val_mse', verbose=1)
     reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_mse', factor=0.1, patience=10, verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
     callbacks_list = [reduce_lr, mcp_save]
 
@@ -107,11 +118,11 @@ with tf.device('/gpu:0'): # use gpu
     history = model.fit(X_train, y_train, batch_size = bs, epochs = num_epochs, validation_data = (X_test, y_test), shuffle = False, callbacks = callbacks_list)
 
 '''
-Results:
+Results: MAX/MIN: 120.0 0.0
 MSE: 150.24014 (BS 8)
 MSE: 153.04620 (BS 16)
 MSE: 148.07474 (BS 32)
-MSE: 147.55717 (BS 64) - Best
+MSE: 0.01106 (BS 64) - Best
 MSE: 151.04295 (BS 128)
 MSE: 153.63898 (BS 256)
 '''
