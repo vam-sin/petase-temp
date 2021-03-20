@@ -2,7 +2,7 @@
 
 Deep learning tool which uses the protein primary sequence for predicting metling points  
 
-# Regression
+# Regression Results
 
 ## Alpha-Beta Hydrolases
 
@@ -62,7 +62,7 @@ Results: MAX/MIN: 120.0 0.0 (Normalized)
 MSE: 0.01106 (BS 64) - Best
 ```
 
-# Classification
+# Classification Results
 
 ## Alpha-Beta Hydrolases
 
@@ -140,7 +140,7 @@ F1 Score
 0.9755633329631406
 ```
 
-# Is-PETase Prediction
+# Is-PETase Prediction Results
 
 ```Ground Truth Values:
 Classes (>=70): [0,0,0,0,0,1]
