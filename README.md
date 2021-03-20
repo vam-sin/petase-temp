@@ -96,6 +96,8 @@ F1 Score
 
 ### ProtBert
 
+#### Convolutional Neural Networks
+
 ```Without SMOTE
 Classes: 
 0: Less than 70 degrees
