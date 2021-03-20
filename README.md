@@ -139,3 +139,44 @@ Confusion Matrix
 F1 Score
 0.9755633329631406
 ```
+
+# Is-PETase Prediction
+
+```Ground Truth Values:
+Classes (>=70): [0,0,0,0,0,1]
+Temperatures: [49, 55, 56, 49, 58, 79]
+```
+
+```
+Predictions Convolutional Neural Network + ProtBert + All Sequnces (SMOTE) + Classification Method:
+[[1.0000000e+00 2.3519826e-08] - 0
+ [1.0000000e+00 2.8369568e-08] - 0 
+ [9.9999976e-01 2.1806292e-07] - 0
+ [1.0000000e+00 4.0027592e-11] - 0
+ [9.9999905e-01 9.4503071e-07] - 0
+ [9.9142951e-01 8.5705305e-03]] - 0
+
+Predictions Convolutional Neural Network + ProtBert + All Sequences (Not SMOTE) + Classification Method:
+[[9.9961984e-01 3.8015953e-04] - 0
+ [9.9972147e-01 2.7857331e-04] - 0
+ [9.9971801e-01 2.8191364e-04] - 0
+ [9.9975854e-01 2.4149123e-04] - 0
+ [9.9953949e-01 4.6047330e-04] - 0
+ [9.9649519e-01 3.5047936e-03]] - 0
+
+Predictions Convolutional Neural Network + ProtBert + Alpha-Beta Hydrolases + Classification Method:
+[[0.9630317  0.03696835] - 0
+ [0.9674205  0.03257949] - 0
+ [0.9740097  0.02599025] - 0
+ [0.959992   0.04000795] - 0
+ [0.96564263 0.03435737] - 0
+ [0.61113536 0.38886467]] - 0
+
+ Predictions Convolutional Neural Network + ProtBert + Alpha-Beta Hydrolases + Classification Method (Tuned to PETases):
+ [[0.9797538  0.02024623] - 0
+ [0.97991234 0.02008769] - 0
+ [0.98267937 0.01732068] - 0
+ [0.97580373 0.02419624] - 0
+ [0.9801838  0.01981621] - 0
+ [0.33680946 0.66319054]] - 1
+```
