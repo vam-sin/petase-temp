@@ -57,7 +57,8 @@ def sensitivity(y_true, y_pred):
     return true_positives / (possible_positives + K.epsilon())
 
 # model
-model = load_model('saved_models/cnn_pb_abh_pet.h5', custom_objects = {'sensitivity': sensitivity})
+model_file_name = 'saved_models/cnn_pb_abh_clas.h5'
+model = load_model(model_file_name, custom_objects = {'sensitivity': sensitivity})
 
 petase_pb = np.load('../processed_data/PB_PETase.npz')['arr_0']
 petase_pb = np.expand_dims(petase_pb, axis=1)
@@ -66,7 +67,19 @@ y_pred = model.predict(petase_pb)
 
 print(y_pred)
 
+''' 55
+Ground Truth: [0,1,1,0,1,1]
+Ground Truth: [49, 55, 56, 49, 58, 79]
+
+[[0.9215557  0.07844438] - 0
+ [0.9391319  0.06086808] - 0
+ [0.9410043  0.05899578] - 0
+ [0.9339834  0.06601658] -0
+ [0.9181604  0.08183958] - 0
+ [0.568211   0.431789  ]] - 0
 '''
+
+''' 70
 Ground Truth: [0,0,0,0,0,1]
 Ground Truth: [49, 55, 56, 49, 58, 79]
 
